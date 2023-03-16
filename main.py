@@ -156,7 +156,7 @@ class Toolkit():
             return self.difference_matrix(arr, d - 1)
 
 # similarity elimination variation
-class AbstractClassifier(Toolkit):
+class Absyst(Toolkit):
     def __init__(self, abstractionDepth=1):
         self.lib = {} 
         self.rawlib = {}
