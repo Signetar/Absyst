@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import json
-            
+import time
 
 
 class Toolkit():
@@ -65,14 +65,19 @@ class Toolkit():
         else:
             raise Exception("The module you chose does not exist. Maybe you misspelled it?")
         
+    def time(self, func, *args, **kwargs):
+        """
+        Times a function.
+        """
+        start = time.time()
+        func(*args, **kwargs)
+        end = time.time()
+        print(f"Time taken: {end-start} seconds")
     
-    def distance(self, a: list, b: list, df) -> float:
+    def distance(self, a, b, df) -> float:
         """
         Using distance metrics, it calculates the distance between a and b. (them being vectors)
         """
-        if type(a) != list:
-            print(a)
-            raise Exception("The input is not a list.")
         if type(a[0]) != float:
             # turn it into a list of floats
             a = [float(i) for i in a]
@@ -82,6 +87,9 @@ class Toolkit():
 
         n = len(a)
         if df.lower() == 'euclidean':
+            return np.linalg.norm(np.array(a)-np.array(b))
+        
+        elif df.lower() == 'py-eucledian':
             summed = 0
             for i in range(0, n-1):
                 summed += (a[i]-b[i])**2
@@ -116,6 +124,33 @@ class Toolkit():
             for i in range(0, n-1):
                 summed += abs(a[i]-b[i])
             return summed
+        
+        elif df.lower() == 'hamming':
+            summed = 0
+            for i in range(0, n-1):
+                summed += abs(a[i]-b[i])
+            return summed/n
+        
+        elif df.lower() == 'canberra':
+            summed = 0
+            for i in range(0, n-1):
+                summed += abs(a[i]-b[i])/(abs(a[i])+abs(b[i]))
+            return summed
+        
+        elif df.lower() == 'braycurtis':
+            summed = 0
+            for i in range(0, n-1):
+                summed += abs(a[i]-b[i])
+            return summed/(summed+sum(a)+sum(b))
+        
+        elif df.lower() == 'mahalanobis':
+            summed = 0
+            for i in range(0, n-1):
+                summed += (a[i]-b[i])**2
+            return math.sqrt(summed)
+        
+        elif df.lower() == 'mrmse':
+            return self.min_rmse(a, b)
 
         else:
             raise Exception("The module you chose does not exist. Maybe you misspelled it?")
@@ -140,10 +175,7 @@ class Toolkit():
         """
         # update: make it so that this process happens 'depth' times.
         # make sure that the types are correct
-        if type(arr) != list:
-            raise Exception("The input is not a list.")
-        if type(arr[0]) != int:
-            raise Exception("The input is not a list of integers.")
+    
         if d == 0:
             return arr
         matrix = []
@@ -155,8 +187,17 @@ class Toolkit():
         else:
             return self.difference_matrix(arr, d - 1)
 
+    def flip(self, arr: list) -> list:
+        output = []
+        for i in range(len(arr[0])):
+            temp = []
+            for j in range(len(arr)):
+                temp.append(arr[j][i])
+            output.append(temp)
+
+        return output
 # similarity elimination variation
-class Absyst(Toolkit):
+class AbstractClassifier(Toolkit):
     def __init__(self, abstractionDepth=1):
         self.lib = {} 
         self.rawlib = {}
@@ -180,6 +221,7 @@ class Absyst(Toolkit):
             return self.lib
 
     def fit(self, X: list, y: list):
+        # measure the time it takes to fit the data
         """
         X: list of lists of integers (2D)
         y: list of integers (1D)
@@ -199,7 +241,7 @@ class Absyst(Toolkit):
         for key in templib.keys():
             item = templib[key]
             self.lib[key] = self.fuse(item[0:int(len(item))])
-
+        end = time.time()
 
     def predict(self, X, d=-1, df = 'euclidean'):
         self.df = df
@@ -214,7 +256,7 @@ class Absyst(Toolkit):
                 scores[key] = self.distance(a, self.difference_matrix(X[loop], d), self.df)
 
             out.append(int(sorted(scores, key=scores.get)[0]))
-        
+    
         return out
 
 
