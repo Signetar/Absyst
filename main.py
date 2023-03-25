@@ -196,6 +196,26 @@ class Toolkit():
             output.append(temp)
 
         return output
+    
+    def find_optimal_clusters(self, vector, distance_metric, max_clusters=10):
+        distortions = []
+        for k in range(1, max_clusters + 1):
+            clusters, centroids = self.k_means(vector, k, distance_metric)
+            distortion = 0
+            for i, cluster in enumerate(clusters):
+                for arr in cluster:
+                    distortion += self.distance(arr, centroids[i], distance_metric) ** 2
+            distortions.append(distortion)
+        
+        elbow_point = np.argmax(np.diff(distortions, 2)) + 2
+        return elbow_point
+
+    def cluster_segregation(self, vector: np.ndarray, distance_metric: str) -> np.ndarray:
+        k = self.find_optimal_clusters(vector, distance_metric)
+        clusters, _ = self.k_means(vector, k, distance_metric)
+        fused_clusters = [self.fuse(cluster) for cluster in clusters]
+        return np.array(fused_clusters)
+
 # similarity elimination variation
 class AbstractClassifier(Toolkit):
     def __init__(self, abstractionDepth=1):
