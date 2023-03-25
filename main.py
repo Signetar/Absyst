@@ -218,11 +218,12 @@ class Toolkit():
 
 # similarity elimination variation
 class AbstractClassifier(Toolkit):
-    def __init__(self, abstractionDepth=1):
+def __init__(self, abstractionDepth=1, use_clustering=True, distance_metric='euclidean'):
         self.lib = {} 
         self.rawlib = {}
         self.abstractionDepth = abstractionDepth
-        self.lf = 'rmse'
+        self.use_clustering = use_clustering
+        self.distance_metric = distance_metric
 
 
     def average(self, a: list) -> int:
@@ -245,7 +246,6 @@ class AbstractClassifier(Toolkit):
         """
         X: list of lists of integers (2D)
         y: list of integers (1D)
-
         Encodes training data (x, y) to self.lib dictionary suited for different classifiers.
         """
         templib = {}
@@ -260,8 +260,12 @@ class AbstractClassifier(Toolkit):
         # now encode the saved data into different uses. templib to lib processing
         for key in templib.keys():
             item = templib[key]
-            self.lib[key] = self.fuse(item[0:int(len(item))])
-        end = time.time()
+            if self.use_clustering:
+                item_np = np.array(item)
+                item_np_fused = self.cluster_segregation(item_np, self.distance_metric)
+                self.lib[key] = item_np_fused.tolist()
+            else:
+                self.lib[key] = self.fuse(item[0:int(len(item))])
 
     def predict(self, X, d=-1, df = 'euclidean'):
         self.df = df
